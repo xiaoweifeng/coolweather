@@ -2,8 +2,11 @@ package com.xiaowei.coolweather.activity;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.Window;
@@ -48,12 +51,22 @@ public class ChooseAreaActivity extends Activity {
     private  List<City>  cityList;
     private  List<Country>  countryList;
     private   Province  selectedprovince;
-    private   City  selectedcity=new City();
+    private   City  selectedcity;
     private  int  currentlevel;
+    private   boolean isfromweatherlayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        isfromweatherlayout = getIntent().getBooleanExtra("from_weather_activity",false);
+        SharedPreferences   preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if(preferences.getBoolean("city_selected",false)&&!isfromweatherlayout)
+        {
+            Intent  intent = new Intent(this,Weather_Activity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.choose_area);
          listView = (ListView) findViewById(R.id.list_view);
@@ -68,9 +81,17 @@ public class ChooseAreaActivity extends Activity {
                 {
                     selectedprovince = provinceList.get(i);
                     querycities();
-                }else  if(currentlevel==CITY_LEVEL)
+                }else  if(currentlevel==CITY_LEVEL){
                     selectedcity = cityList.get(i);
-                querycountries();
+                            querycountries();}
+                else if(currentlevel==COUNTRY_LEVEL)
+                {
+                    String  countrycode =  countryList.get(i).getCountrycode();
+                    Intent  intent =  new Intent(ChooseAreaActivity.this,Weather_Activity.class);
+                    intent.putExtra("country_code",countrycode);
+                    startActivity(intent);
+                    finish();
+                }
             }
         });
         queryprovince();
@@ -223,8 +244,12 @@ public class ChooseAreaActivity extends Activity {
             querycities();
         else  if(currentlevel==CITY_LEVEL)
             queryprovince();
-        else
+        else {
+     if(isfromweatherlayout){
+                Intent  intent = new Intent(this,Weather_Activity.class);
+         startActivity(intent);
+            }
             finish();
-
+        }
     }
 }
